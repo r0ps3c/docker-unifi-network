@@ -1,15 +1,15 @@
-FROM ubuntu
+FROM ubuntu:bionic
 ENV DEBIAN_FRONTEND noninteractive
 RUN \
 	apt update && \
-	apt -yy dist-upgrade && \
-	apt install -yy gnupg wget openjdk-8-jre-headless jsvc && \
-	echo "deb http://www.ubnt.com/downloads/unifi/debian stable ubiquiti" >  /etc/apt/sources.list.d/100-ubnt.list && \
-	wget -qO- https://dl.ubnt.com/unifi/unifi-repo.gpg | apt-key add && \
-	echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.4 multiverse" | tee /etc/apt/sources.list.d/mongodb-org.list && \
+	apt -y install ca-certificates apt-transport-https wget gnupg && \
+	echo 'deb https://www.ui.com/downloads/unifi/debian stable ubiquiti' > /etc/apt/sources.list.d/100-ubnt-unifi.list && \
+	wget -qO- https://dl.ui.com/unifi/unifi-repo.gpg | apt-key add && \
+echo "deb https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.4 multiverse" > /etc/apt/sources.list.d/mongodb-org-3.4.list && \
 	wget -qO- https://www.mongodb.org/static/pgp/server-3.4.asc | apt-key add && \
 	apt update && \
-	apt install -yy mongodb-org unifi && \
+	apt install -yy mongodb-org unifi jsvc && \
+	apt -y dist-upgrade && \
 	apt-get clean && \
 	mkdir -p /logs /usr/lib/unifi/run && \
 	chown -R unifi:unifi /logs /usr/lib/unifi/run
