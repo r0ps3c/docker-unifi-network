@@ -1,14 +1,13 @@
-FROM ubuntu:bionic
+FROM ubuntu
 ENV DEBIAN_FRONTEND noninteractive
+ARG UNIFI_VER="6.5.53"
 RUN \
 	apt update && \
-	apt -y install ca-certificates apt-transport-https wget gnupg && \
+	apt -y install ca-certificates apt-transport-https wget gnupg openjdk-8-jre-headless && \
 	echo 'deb https://www.ui.com/downloads/unifi/debian stable ubiquiti' > /etc/apt/sources.list.d/100-ubnt-unifi.list && \
 	wget -qO- https://dl.ui.com/unifi/unifi-repo.gpg | apt-key add && \
-echo "deb https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.4 multiverse" > /etc/apt/sources.list.d/mongodb-org-3.4.list && \
-	wget -qO- https://www.mongodb.org/static/pgp/server-3.4.asc | apt-key add && \
 	apt update && \
-	apt install -yy mongodb-org unifi && \
+	apt install -yy unifi=$UNIFI_VER\* && \
 	apt -y dist-upgrade && \
 	apt-get clean && \
 	wget -qO /usr/share/java/activation.jar https://repo1.maven.org/maven2/com/sun/activation/jakarta.activation/1.2.2/jakarta.activation-1.2.2.jar && \
