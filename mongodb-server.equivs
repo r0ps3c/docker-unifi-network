@@ -1,5 +1,5 @@
 Package: mongodb-server
-Version: 3.6
+Version: 1:4.4
 Maintainer: Rudolph Pereira <rudolph@faex.net>
 Architecture: all
 Description: dummy mongodb-server package
