@@ -1,0 +1,7 @@
+Package: mongodb-server
+Version: 3.6
+Maintainer: Rudolph Pereira <rudolph@faex.net>
+Architecture: all
+Description: dummy mongodb-server package
+ A dummy package to allow unifi package to be installed, and then configured
+ to use a non-local mongodb instance
