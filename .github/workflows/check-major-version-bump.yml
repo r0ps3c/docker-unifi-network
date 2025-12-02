@@ -1,0 +1,114 @@
+name: Check for Major Version Bump
+
+on:
+  workflow_run:
+    workflows: ["Build and Tag Docker Image"]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  check-major-bump:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Get master branch UniFi version
+        id: master-version
+        run: |
+          # Pull latest image from master
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          MASTER_VERSION=$(docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest dpkg-query --showformat='${Version}' unifi)
+          MASTER_MAJOR=$(echo "$MASTER_VERSION" | cut -d. -f1)
+          echo "major=$MASTER_MAJOR" >> $GITHUB_OUTPUT
+          echo "full=$MASTER_VERSION" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+        with:
+          ref: stable
+          path: stable-branch
+
+      - name: Get stable branch UniFi version
+        id: stable-version
+        run: |
+          cd stable-branch
+          # Check if stable image exists
+          if docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stable 2>/dev/null; then
+            STABLE_VERSION=$(docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stable dpkg-query --showformat='${Version}' unifi)
+            STABLE_MAJOR=$(echo "$STABLE_VERSION" | cut -d. -f1)
+          else
+            # No stable tag yet, treat as major version 0
+            STABLE_MAJOR=0
+            STABLE_VERSION="none"
+          fi
+          echo "major=$STABLE_MAJOR" >> $GITHUB_OUTPUT
+          echo "full=$STABLE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if major version changed
+        id: check-bump
+        run: |
+          MASTER_MAJOR="${{ steps.master-version.outputs.major }}"
+          STABLE_MAJOR="${{ steps.stable-version.outputs.major }}"
+
+          if [ "$MASTER_MAJOR" != "$STABLE_MAJOR" ]; then
+            echo "major_changed=true" >> $GITHUB_OUTPUT
+            echo "Major version bump detected: $STABLE_MAJOR -> $MASTER_MAJOR"
+          else
+            echo "major_changed=false" >> $GITHUB_OUTPUT
+            echo "No major version change (both at version $MASTER_MAJOR)"
+          fi
+
+      - name: Create PR for stable promotion
+        if: steps.check-bump.outputs.major_changed == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: promote UniFi ${{ steps.master-version.outputs.major }}.x to stable"
+          branch: promote-stable-v${{ steps.master-version.outputs.major }}
+          base: stable
+          title: "Promote UniFi ${{ steps.master-version.outputs.major }}.x to stable"
+          body: |
+            ## UniFi Major Version Promotion
+
+            This PR promotes the stable branch to UniFi **${{ steps.master-version.outputs.major }}.x**.
+
+            ### Version Changes
+            - Current stable: UniFi ${{ steps.stable-version.outputs.full }} (major version ${{ steps.stable-version.outputs.major }})
+            - New version: UniFi ${{ steps.master-version.outputs.full }} (major version ${{ steps.master-version.outputs.major }})
+
+            ### What happens when merged:
+            - `stable` branch will be updated to match `master`
+            - `stable` tag will point to UniFi ${{ steps.master-version.outputs.major }}.x
+
+            ### Testing Checklist
+            - [ ] Review [build logs](https://github.com/${{ github.repository }}/actions)
+            - [ ] Verify `latest` tag works: `docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest`
+            - [ ] Test UniFi ${{ steps.master-version.outputs.major }}.x functionality
+            - [ ] Check for breaking changes in [UniFi release notes](https://community.ui.com/releases)
+
+            ### Manual Testing Commands
+            ```bash
+            # Pull and test the new version
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.master-version.outputs.major }}
+            docker run -d --name unifi-test -p 8443:8443 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.master-version.outputs.major }}
+
+            # Access at https://localhost:8443
+            # Verify setup wizard or existing config loads
+
+            # Cleanup
+            docker rm -f unifi-test
+            ```
+
+            ---
+
+            🤖 This PR was automatically created by the version bump detection workflow.
+          labels: |
+            stable-promotion
+            major-version-bump

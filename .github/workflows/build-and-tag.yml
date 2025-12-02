@@ -1,0 +1,96 @@
+# This workflow:
+# - Builds Docker image on push, PR, or manual trigger
+# - Tags based on branch (master: latest + major version; stable: stable tag only)
+# - Runs comprehensive test suite before pushing
+
+name: Build and Tag Docker Image
+
+on:
+  push:
+    branches: [ master, stable ]
+  pull_request:
+    branches: [ master, stable ]
+  workflow_dispatch:  # Triggered by check-updates.yml or manual
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: make build
+
+      - name: Extract UniFi version from image
+        id: extract-version
+        run: |
+          # Get full version
+          FULL_VERSION=$(docker run --rm unifi-network:master dpkg -query --showformat='${Version}' unifi)
+          echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
+
+          # Extract major version (e.g., "7.5.187" -> "7")
+          MAJOR_VERSION=$(echo "$FULL_VERSION" | cut -d. -f1)
+          echo "major_version=$MAJOR_VERSION" >> $GITHUB_OUTPUT
+
+          echo "Detected UniFi version: $FULL_VERSION (major: $MAJOR_VERSION)"
+
+      - name: Run structure tests
+        run: make test-structure
+
+      - name: Run standalone tests
+        run: make test-standalone
+
+      - name: Run integration tests
+        run: make test-integration
+
+      - name: Tag and push images
+        if: github.event_name != 'pull_request'
+        run: |
+          MAJOR_VERSION="${{ steps.extract-version.outputs.major_version }}"
+          FULL_VERSION="${{ steps.extract-version.outputs.full_version }}"
+          IMAGE_BASE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+
+          # Determine which tags to apply based on branch
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            # Master branch: tag as latest + major version + full version
+            docker tag unifi-network:master "${IMAGE_BASE}:latest"
+            docker tag unifi-network:master "${IMAGE_BASE}:${MAJOR_VERSION}"
+            docker tag unifi-network:master "${IMAGE_BASE}:${FULL_VERSION}"
+
+            docker push "${IMAGE_BASE}:latest"
+            docker push "${IMAGE_BASE}:${MAJOR_VERSION}"
+            docker push "${IMAGE_BASE}:${FULL_VERSION}"
+
+            echo "Pushed tags: latest, ${MAJOR_VERSION}, ${FULL_VERSION}"
+
+          elif [ "${{ github.ref }}" == "refs/heads/stable" ]; then
+            # Stable branch: only tag as stable
+            docker tag unifi-network:master "${IMAGE_BASE}:stable"
+            docker push "${IMAGE_BASE}:stable"
+
+            echo "Pushed tag: stable (UniFi ${FULL_VERSION})"
+          fi
+
+      - name: Clean up test artifacts
+        if: always()
+        run: make clean-test

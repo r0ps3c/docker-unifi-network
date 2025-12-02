@@ -1,0 +1,80 @@
+name: Check for UniFi Updates
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM UTC daily
+  workflow_dispatch:
+
+jobs:
+  check-unifi-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Random delay 0-60 minutes to spread load
+      - name: Random delay
+        run: sleep $((RANDOM % 3600))
+
+      # Restore cached version
+      - name: Restore cached UniFi version
+        id: cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: unifi-version.txt
+          key: unifi-version-cache
+
+      # Check latest version
+      - name: Check UniFi version from APT
+        id: check-version
+        run: |
+          # Add Ubiquiti repository
+          echo 'deb https://www.ui.com/downloads/unifi/debian stable ubiquiti' | sudo tee /etc/apt/sources.list.d/unifi.list
+          wget -qO - https://dl.ui.com/unifi/unifi-repo.gpg | sudo apt-key add -
+          sudo apt-get update -qq
+
+          # Get latest version
+          NEW_VERSION=$(apt-cache policy unifi | grep Candidate | awk '{print $2}')
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          # Get cached version
+          if [ -f "unifi-version.txt" ]; then
+            OLD_VERSION=$(cat unifi-version.txt)
+          else
+            OLD_VERSION=""
+          fi
+          echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+
+          # Check if changed
+          if [ "$NEW_VERSION" != "$OLD_VERSION" ]; then
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+            echo "UniFi version changed: $OLD_VERSION -> $NEW_VERSION"
+          else
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+            echo "UniFi version unchanged: $NEW_VERSION"
+          fi
+
+      # Save new version to cache
+      - name: Update version cache
+        if: steps.check-version.outputs.version_changed == 'true'
+        run: echo "${{ steps.check-version.outputs.new_version }}" > unifi-version.txt
+
+      - name: Save cache
+        if: steps.check-version.outputs.version_changed == 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: unifi-version.txt
+          key: unifi-version-cache
+
+      # Trigger build workflow
+      - name: Trigger build on version change
+        if: steps.check-version.outputs.version_changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-and-tag.yml',
+              ref: 'master'
+            });
+            core.info('Build triggered for UniFi version ${{ steps.check-version.outputs.new_version }}');

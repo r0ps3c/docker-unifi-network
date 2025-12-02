@@ -1,0 +1,151 @@
+# UniFi Network Application Docker Image
+
+Docker image for Ubiquiti's UniFi Network Application with automated daily builds and comprehensive testing.
+
+## Features
+
+- Based on Ubuntu
+- Latest UniFi Network Application from official repository
+- Dummy MongoDB package for external database support
+- Non-root user (UID 5000)
+- Automated daily builds with testing
+- Comprehensive test coverage
+
+## Quick Start
+
+```bash
+# Build the image
+make build
+
+# Run tests
+make test-all
+
+# Run container
+docker run -d \
+  -p 8080:8080 \
+  -p 8443:8443 \
+  --name unifi \
+  unifi:master
+```
+
+## Image Tags
+
+This project maintains multiple Docker image tags for different use cases:
+
+### Tag Strategy
+
+- **`latest`** - Most recent build (may include new major versions)
+  - Updates: Automatically on every successful build
+  - Use for: Testing, development, staying current
+
+- **`<major>`** (e.g., `7`, `8`) - Latest build for specific UniFi major version
+  - Updates: Automatically when new minor/patch versions released
+  - Use for: Pinning to a major version while getting updates
+
+- **`stable`** - Manually promoted stable release
+  - Updates: Only after manual approval via PR
+  - Use for: Production deployments requiring stability
+
+- **`<full-version>`** (e.g., `7.5.187`) - Specific version pin
+  - Updates: Never (immutable)
+  - Use for: Exact version reproducibility
+
+### Examples
+
+```bash
+# Always latest (may jump major versions)
+docker pull ghcr.io/r0ps3c/docker-unifi-network:latest
+
+# Latest UniFi 7.x (auto-updates within v7)
+docker pull ghcr.io/r0ps3c/docker-unifi-network:7
+
+# Stable release (manually promoted)
+docker pull ghcr.io/r0ps3c/docker-unifi-network:stable
+
+# Exact version pin
+docker pull ghcr.io/r0ps3c/docker-unifi-network:7.5.187
+```
+
+### Update Policy
+
+- **Ubuntu base image**: Monitored by Dependabot, automatic PRs for security updates
+- **UniFi package**: Checked daily, builds triggered automatically on new releases
+- **Major version promotions**: Require manual PR approval before updating `stable` tag
+
+## Testing
+
+This image includes comprehensive automated tests organized into three focused suites:
+
+```bash
+# Run all tests (~3-4 minutes)
+make test-all
+
+# Run individual test suites
+make test-structure    # Image structure validation (~15-20s)
+make test-standalone   # Standalone container tests (~60-90s)
+make test-integration  # Multi-container with MongoDB (~90-120s)
+```
+
+The test suite uses a shared library for consistent logging, cleanup, and wait operations. See [tests/README.md](tests/README.md) for detailed documentation.
+
+## Automated Builds
+
+Daily automated builds via GitHub Actions:
+- Pull latest Ubuntu base image
+- Install latest UniFi version
+- Run complete test suite (structure, standalone, integration)
+- Push to registry on success
+- Tag with date (YYYY-MM-DD) and 'latest'
+
+Tests also run on every push and pull request to ensure code quality.
+
+## Usage
+
+### Standalone (no external MongoDB)
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -p 8443:8443 \
+  -v unifi-data:/usr/lib/unifi/data \
+  -v unifi-logs:/logs \
+  unifi:master
+```
+
+### With External MongoDB
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -p 8443:8443 \
+  -e DB_URI=mongodb://mongodb:27017/unifi \
+  -e DB_NAME=unifi \
+  -v unifi-data:/usr/lib/unifi/data \
+  -v unifi-logs:/logs \
+  unifi:master
+```
+
+## Ports
+
+- `8080` - Device inform
+- `8443` - Web interface (HTTPS)
+
+## Volumes
+
+- `/usr/lib/unifi/data` - UniFi data directory
+- `/logs` - Application logs
+
+## Environment Variables
+
+- `DB_URI` - MongoDB connection string
+- `DB_NAME` - MongoDB database name
+
+## Build Arguments
+
+None currently.
+
+## License
+
+[Your License]
+
+## Contributing
+
+PRs welcome! All changes must pass the test suite.

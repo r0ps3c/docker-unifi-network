@@ -1,0 +1,7 @@
+# Test artifacts
+tests/*.log
+tests/test-results/
+tests/.tmp/
+
+# Docker artifacts
+*.tar

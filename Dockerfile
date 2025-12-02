@@ -1,5 +1,5 @@
-FROM ubuntu as builder
-ENV DEBIAN_FRONTEND noninteractive
+FROM ubuntu AS builder
+ENV DEBIAN_FRONTEND=noninteractive
 RUN \
 	apt update && \
 	apt -y install equivs
@@ -9,6 +9,10 @@ RUN \
 	equivs-build mongodb-server.equivs
 
 FROM ubuntu
+LABEL org.opencontainers.image.title="UniFi Network Application"
+LABEL org.opencontainers.image.description="Ubiquiti UniFi Network Application"
+LABEL org.opencontainers.image.vendor="Custom Build"
+LABEL org.opencontainers.image.source="https://github.com/r0ps3c/docker-unifi-network"
 COPY --from=builder /tmp/mongodb-server*.deb /tmp/
 RUN \
 	apt update && \
@@ -22,10 +26,11 @@ RUN \
 	apt -y --purge autoremove && \
         apt -y clean && \
         rm -rf /var/lib/apt/lists/* /tmp/* && \
-	mkdir -p /logs /usr/lib/unifi/run && \
-	chown -R unifi:unifi /logs /usr/lib/unifi/run
+	mkdir -p /logs /usr/lib/unifi/run /usr/lib/unifi/data && \
+	chown -R unifi:unifi /logs /usr/lib/unifi/run /usr/lib/unifi/data
+
+COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
 USER unifi
 EXPOSE 8080 8443
-# taken from /usr/lib/unifi/bin/unifi.init
-ENTRYPOINT ["/usr/bin/java", "-Dfile.encoding=UTF-8", "-Djava.awt.headless=true", "-Dapple.awt.UIElement=true", "-Dunifi.core.enabled=false","-Xmx1024M","-XX:+UseParallelGC", "-XX:+ExitOnOutOfMemoryError", "-XX:+CrashOnOutOfMemoryError","-XX:ErrorFile=/var/run/unifi/hs_err_pid%p.log","-Dunifi.datadir=/usr/lib/unifi/data/","-Dunifi.logdir=/logs","-Dunifi.rundir=/var/run/unifi", "--add-opens","java.base/java.lang=ALL-UNNAMED", "--add-opens","java.base/java.time=ALL-UNNAMED", "--add-opens","java.base/sun.security.util=ALL-UNNAMED", "--add-opens","java.base/java.io=ALL-UNNAMED", "--add-opens","java.rmi/sun.rmi.transport=ALL-UNNAMED","-Dlog4j2.formatMsgNoLookups=true","-jar","/usr/lib/unifi/lib/ace.jar","start"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
