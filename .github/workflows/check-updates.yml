@@ -11,10 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Random delay 0-60 minutes to spread load
-      - name: Random delay
-        run: sleep $((RANDOM % 3600))
-
       # Restore cached version
       - name: Restore cached UniFi version
         id: cache-restore
