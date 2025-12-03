@@ -77,27 +77,15 @@ docker pull ghcr.io/r0ps3c/docker-unifi-network:7.5.187
 This image includes comprehensive automated tests organized into three focused suites:
 
 ```bash
-# Run all tests (~3-4 minutes)
 make test-all
 
 # Run individual test suites
-make test-structure    # Image structure validation (~15-20s)
-make test-standalone   # Standalone container tests (~60-90s)
-make test-integration  # Multi-container with MongoDB (~90-120s)
+make test-structure    # Image structure validation
+make test-standalone   # Standalone container tests
+make test-integration  # Multi-container with MongoDB
 ```
 
 The test suite uses a shared library for consistent logging, cleanup, and wait operations. See [tests/README.md](tests/README.md) for detailed documentation.
-
-## Automated Builds
-
-Daily automated builds via GitHub Actions:
-- Pull latest Ubuntu base image
-- Install latest UniFi version
-- Run complete test suite (structure, standalone, integration)
-- Push to registry on success
-- Tag with date (YYYY-MM-DD) and 'latest'
-
-Tests also run on every push and pull request to ensure code quality.
 
 ## Usage
 
@@ -138,14 +126,9 @@ docker run -d \
 - `DB_URI` - MongoDB connection string
 - `DB_NAME` - MongoDB database name
 
-## Build Arguments
-
-None currently.
-
 ## License
 
-[Your License]
+This Docker image packaging is licensed under the MIT License.
 
-## Contributing
+The UniFi Network Application software is proprietary and owned by [Ubiquiti Inc.](https://www.ui.com/legal/termsofservice/)
 
-PRs welcome! All changes must pass the test suite.
