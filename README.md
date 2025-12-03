@@ -25,7 +25,7 @@ docker run -d \
   -p 8080:8080 \
   -p 8443:8443 \
   --name unifi \
-  unifi:master
+  unifi-network
 ```
 
 ## Image Tags
@@ -96,7 +96,7 @@ docker run -d \
   -p 8443:8443 \
   -v unifi-data:/usr/lib/unifi/data \
   -v unifi-logs:/logs \
-  unifi:master
+  unifi-network
 ```
 
 ### With External MongoDB
@@ -108,7 +108,7 @@ docker run -d \
   -e DB_NAME=unifi \
   -v unifi-data:/usr/lib/unifi/data \
   -v unifi-logs:/logs \
-  unifi:master
+  unifi-network
 ```
 
 ## Ports

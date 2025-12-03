@@ -74,6 +74,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'build-and-tag.yml',
-              ref: 'master'
+              ref: 'main'
             });
             core.info('Build triggered for UniFi version ${{ steps.check-version.outputs.new_version }}');

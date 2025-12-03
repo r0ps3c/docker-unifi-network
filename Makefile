@@ -1,5 +1,5 @@
 PKGNAME:=unifi-network
-TAG:=master
+TAG:=main
 DOCKERFILE:=Dockerfile
 
 .PHONY: build push test test-all test-structure test-standalone test-integration clean-test

@@ -7,7 +7,7 @@ on:
   workflow_run:
     workflows: ["Build and Tag Docker Image"]
     types: [completed]
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
 env:
@@ -21,17 +21,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: master
+          ref: main
 
-      - name: Get master branch UniFi version
-        id: master-version
+      - name: Get main branch UniFi version
+        id: main-version
         run: |
-          # Pull latest image from master
+          # Pull latest image from main
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          MASTER_VERSION=$(docker run --rm --entrypoint sh ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -c "dpkg-query -W --showformat='\${Version}' unifi")
-          MASTER_MAJOR=$(echo "$MASTER_VERSION" | cut -d. -f1)
-          echo "major=$MASTER_MAJOR" >> $GITHUB_OUTPUT
-          echo "full=$MASTER_VERSION" >> $GITHUB_OUTPUT
+          MAIN_VERSION=$(docker run --rm --entrypoint sh ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -c "dpkg-query -W --showformat='\${Version}' unifi")
+          MAIN_MAJOR=$(echo "$MAIN_VERSION" | cut -d. -f1)
+          echo "major=$MAIN_MAJOR" >> $GITHUB_OUTPUT
+          echo "full=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
         with:
@@ -57,15 +57,15 @@ jobs:
       - name: Check if major version changed
         id: check-bump
         run: |
-          MASTER_MAJOR="${{ steps.master-version.outputs.major }}"
+          MAIN_MAJOR="${{ steps.main-version.outputs.major }}"
           STABLE_MAJOR="${{ steps.stable-version.outputs.major }}"
 
-          if [ "$MASTER_MAJOR" != "$STABLE_MAJOR" ]; then
+          if [ "$MAIN_MAJOR" != "$STABLE_MAJOR" ]; then
             echo "major_changed=true" >> $GITHUB_OUTPUT
-            echo "Major version bump detected: $STABLE_MAJOR -> $MASTER_MAJOR"
+            echo "Major version bump detected: $STABLE_MAJOR -> $MAIN_MAJOR"
           else
             echo "major_changed=false" >> $GITHUB_OUTPUT
-            echo "No major version change (both at version $MASTER_MAJOR)"
+            echo "No major version change (both at version $MAIN_MAJOR)"
           fi
 
       - name: Create PR for stable promotion
@@ -73,34 +73,34 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: promote UniFi ${{ steps.master-version.outputs.major }}.x to stable"
-          branch: promote-stable-v${{ steps.master-version.outputs.major }}
+          commit-message: "chore: promote UniFi ${{ steps.main-version.outputs.major }}.x to stable"
+          branch: promote-stable-v${{ steps.main-version.outputs.major }}
           base: stable
-          title: "Promote UniFi ${{ steps.master-version.outputs.major }}.x to stable"
+          title: "Promote UniFi ${{ steps.main-version.outputs.major }}.x to stable"
           body: |
             ## UniFi Major Version Promotion
 
-            This PR promotes the stable branch to UniFi **${{ steps.master-version.outputs.major }}.x**.
+            This PR promotes the stable branch to UniFi **${{ steps.main-version.outputs.major }}.x**.
 
             ### Version Changes
             - Current stable: UniFi ${{ steps.stable-version.outputs.full }} (major version ${{ steps.stable-version.outputs.major }})
-            - New version: UniFi ${{ steps.master-version.outputs.full }} (major version ${{ steps.master-version.outputs.major }})
+            - New version: UniFi ${{ steps.main-version.outputs.full }} (major version ${{ steps.main-version.outputs.major }})
 
             ### What happens when merged:
-            - `stable` branch will be updated to match `master`
-            - `stable` tag will point to UniFi ${{ steps.master-version.outputs.major }}.x
+            - `stable` branch will be updated to match `main`
+            - `stable` tag will point to UniFi ${{ steps.main-version.outputs.major }}.x
 
             ### Testing Checklist
             - [ ] Review [build logs](https://github.com/${{ github.repository }}/actions)
             - [ ] Verify `latest` tag works: `docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest`
-            - [ ] Test UniFi ${{ steps.master-version.outputs.major }}.x functionality
+            - [ ] Test UniFi ${{ steps.main-version.outputs.major }}.x functionality
             - [ ] Check for breaking changes in [UniFi release notes](https://community.ui.com/releases)
 
             ### Manual Testing Commands
             ```bash
             # Pull and test the new version
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.master-version.outputs.major }}
-            docker run -d --name unifi-test -p 8443:8443 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.master-version.outputs.major }}
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.main-version.outputs.major }}
+            docker run -d --name unifi-test -p 8443:8443 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.main-version.outputs.major }}
 
             # Access at https://localhost:8443
             # Verify setup wizard or existing config loads

@@ -7,7 +7,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
-IMAGE_NAME="${1:-unifi:master}"
+IMAGE_NAME="${1:-unifi-network:main}"
 
 # Unique resource names based on PID
 TEST_ID=$$

@@ -1,15 +1,15 @@
 # This workflow:
 # - Builds Docker image on push, PR, or manual trigger
-# - Tags based on branch (master: latest + major version; stable: stable tag only)
+# - Tags based on branch (main: latest + major version; stable: stable tag only)
 # - Runs comprehensive test suite before pushing
 
 name: Build and Tag Docker Image
 
 on:
   push:
-    branches: [ master, stable ]
+    branches: [ main, stable ]
   pull_request:
-    branches: [ master, stable ]
+    branches: [ main, stable ]
   workflow_dispatch:  # Triggered by check-updates.yml or manual
 
 env:
@@ -45,7 +45,7 @@ jobs:
         id: extract-version
         run: |
           # Get full version (bypass entrypoint for simple query)
-          FULL_VERSION=$(docker run --rm --entrypoint sh unifi-network:master -c "dpkg-query -W --showformat='\${Version}' unifi")
+          FULL_VERSION=$(docker run --rm --entrypoint sh unifi-network:main -c "dpkg-query -W --showformat='\${Version}' unifi")
           echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
 
           # Extract major version (e.g., "7.5.187" -> "7")
@@ -71,11 +71,11 @@ jobs:
           IMAGE_BASE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
 
           # Determine which tags to apply based on branch
-          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-            # Master branch: tag as latest + major version + full version
-            docker tag unifi-network:master "${IMAGE_BASE}:latest"
-            docker tag unifi-network:master "${IMAGE_BASE}:${MAJOR_VERSION}"
-            docker tag unifi-network:master "${IMAGE_BASE}:${FULL_VERSION}"
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            # Main branch: tag as latest + major version + full version
+            docker tag unifi-network:main "${IMAGE_BASE}:latest"
+            docker tag unifi-network:main "${IMAGE_BASE}:${MAJOR_VERSION}"
+            docker tag unifi-network:main "${IMAGE_BASE}:${FULL_VERSION}"
 
             docker push "${IMAGE_BASE}:latest"
             docker push "${IMAGE_BASE}:${MAJOR_VERSION}"
@@ -85,7 +85,7 @@ jobs:
 
           elif [ "${{ github.ref }}" == "refs/heads/stable" ]; then
             # Stable branch: only tag as stable
-            docker tag unifi-network:master "${IMAGE_BASE}:stable"
+            docker tag unifi-network:main "${IMAGE_BASE}:stable"
             docker push "${IMAGE_BASE}:stable"
 
             echo "Pushed tag: stable (UniFi ${FULL_VERSION})"

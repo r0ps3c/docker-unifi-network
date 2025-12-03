@@ -85,7 +85,7 @@ log_success "Test passed"
 ## CI/CD Integration
 
 Tests run automatically on:
-- Every push to master/main
+- Every push to main
 - Every pull request
 - Manual workflow trigger
 
