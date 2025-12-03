@@ -42,9 +42,9 @@ This project maintains multiple Docker image tags for different use cases:
   - Updates: Automatically when new minor/patch versions released
   - Use for: Pinning to a major version while getting updates
 
-- **`stable`** - Manually promoted stable release
-  - Updates: Only after manual approval via PR
-  - Use for: Production deployments requiring stability
+- **`stable`** - Production-ready stable release
+  - Updates: Automatically for minor/patch versions; requires PR approval for major versions
+  - Use for: Production deployments requiring stability with automatic security/bug fixes
 
 - **`<full-version>`** (e.g., `7.5.187`) - Specific version pin
   - Updates: Never (immutable)

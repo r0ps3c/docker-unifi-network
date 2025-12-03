@@ -63,6 +63,31 @@ jobs:
       - name: Run integration tests
         run: make test-integration
 
+      - name: Check stable tag compatibility
+        id: check-stable
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE_BASE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          MAIN_MAJOR="${{ steps.extract-version.outputs.major_version }}"
+
+          # Try to pull current stable tag
+          if docker pull "${IMAGE_BASE}:stable" 2>/dev/null; then
+            STABLE_VERSION=$(docker run --rm --entrypoint sh "${IMAGE_BASE}:stable" -c "dpkg-query -W --showformat='\${Version}' unifi")
+            STABLE_MAJOR=$(echo "$STABLE_VERSION" | cut -d. -f1)
+
+            if [ "$MAIN_MAJOR" == "$STABLE_MAJOR" ]; then
+              echo "safe_to_update=true" >> $GITHUB_OUTPUT
+              echo "Major versions match (both v${MAIN_MAJOR}) - safe to update stable tag"
+            else
+              echo "safe_to_update=false" >> $GITHUB_OUTPUT
+              echo "Major version mismatch detected (stable: v${STABLE_MAJOR}, main: v${MAIN_MAJOR}) - will NOT update stable tag"
+            fi
+          else
+            # No stable tag exists yet - safe to create it
+            echo "safe_to_update=true" >> $GITHUB_OUTPUT
+            echo "No stable tag exists - safe to create initial stable tag"
+          fi
+
       - name: Tag and push images
         if: github.event_name != 'pull_request'
         run: |
@@ -82,6 +107,15 @@ jobs:
             docker push "${IMAGE_BASE}:${FULL_VERSION}"
 
             echo "Pushed tags: latest, ${MAJOR_VERSION}, ${FULL_VERSION}"
+
+            # Auto-update stable tag if major versions match
+            if [ "${{ steps.check-stable.outputs.safe_to_update }}" == "true" ]; then
+              docker tag unifi-network:main "${IMAGE_BASE}:stable"
+              docker push "${IMAGE_BASE}:stable"
+              echo "Auto-updated stable tag to UniFi ${FULL_VERSION}"
+            else
+              echo "Skipped stable tag update (major version mismatch - requires PR approval)"
+            fi
 
           elif [ "${{ github.ref }}" == "refs/heads/stable" ]; then
             # Stable branch: only tag as stable
