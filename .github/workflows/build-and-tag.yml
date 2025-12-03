@@ -44,8 +44,8 @@ jobs:
       - name: Extract UniFi version from image
         id: extract-version
         run: |
-          # Get full version
-          FULL_VERSION=$(docker run --rm unifi-network:master dpkg -query --showformat='${Version}' unifi)
+          # Get full version (bypass entrypoint for simple query)
+          FULL_VERSION=$(docker run --rm --entrypoint sh unifi-network:master -c "dpkg-query -W --showformat='\${Version}' unifi")
           echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
 
           # Extract major version (e.g., "7.5.187" -> "7")
