@@ -25,7 +25,7 @@ jobs:
         run: |
           # Pull latest image from master
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          MASTER_VERSION=$(docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest dpkg-query --showformat='${Version}' unifi)
+          MASTER_VERSION=$(docker run --rm --entrypoint sh ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -c "dpkg-query -W --showformat='\${Version}' unifi")
           MASTER_MAJOR=$(echo "$MASTER_VERSION" | cut -d. -f1)
           echo "major=$MASTER_MAJOR" >> $GITHUB_OUTPUT
           echo "full=$MASTER_VERSION" >> $GITHUB_OUTPUT
@@ -41,7 +41,7 @@ jobs:
           cd stable-branch
           # Check if stable image exists
           if docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stable 2>/dev/null; then
-            STABLE_VERSION=$(docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stable dpkg-query --showformat='${Version}' unifi)
+            STABLE_VERSION=$(docker run --rm --entrypoint sh ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:stable -c "dpkg-query -W --showformat='\${Version}' unifi")
             STABLE_MAJOR=$(echo "$STABLE_VERSION" | cut -d. -f1)
           else
             # No stable tag yet, treat as major version 0
