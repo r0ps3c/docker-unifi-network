@@ -1,4 +1,7 @@
 name: Check for UniFi Updates
+permissions:
+  contents: read
+  actions: write
 
 on:
   schedule:
