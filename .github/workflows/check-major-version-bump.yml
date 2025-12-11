@@ -19,7 +19,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: main
 
@@ -27,13 +27,13 @@ jobs:
         id: main-version
         run: |
           # Pull latest image from main
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          MAIN_VERSION=$(docker run --rm --entrypoint sh ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -c "dpkg-query -W --showformat='\${Version}' unifi")
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+          MAIN_VERSION=$(docker run --rm --entrypoint sh ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main -c "dpkg-query -W --showformat='\${Version}' unifi")
           MAIN_MAJOR=$(echo "$MAIN_VERSION" | cut -d. -f1)
           echo "major=$MAIN_MAJOR" >> $GITHUB_OUTPUT
           echo "full=$MAIN_VERSION" >> $GITHUB_OUTPUT
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: stable
           path: stable-branch
@@ -70,7 +70,7 @@ jobs:
 
       - name: Create PR for stable promotion
         if: steps.check-bump.outputs.major_changed == 'true'
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.11
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: promote UniFi ${{ steps.main-version.outputs.major }}.x to stable"
