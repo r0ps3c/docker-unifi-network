@@ -12,12 +12,12 @@ jobs:
   check-unifi-updates:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       # Restore cached version
       - name: Restore cached UniFi version
         id: cache-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@6f8efc29b200d32929f49075959781ed54ec270c # v3.5.0
         with:
           path: unifi-version.txt
           key: unifi-version-cache
@@ -59,7 +59,7 @@ jobs:
 
       - name: Save cache
         if: steps.check-version.outputs.version_changed == 'true'
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@6f8efc29b200d32929f49075959781ed54ec270c # v3.5.0
         with:
           path: unifi-version.txt
           key: unifi-version-cache
@@ -67,7 +67,7 @@ jobs:
       # Trigger build workflow
       - name: Trigger build on version change
         if: steps.check-version.outputs.version_changed == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             await github.rest.actions.createWorkflowDispatch({
