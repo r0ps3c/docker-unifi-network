@@ -1,0 +1,41 @@
+# This workflow runs Renovate bot to automatically update dependencies
+# Handles: Ubuntu base images, GitHub Actions
+# UniFi package updates are handled by check-updates.yml
+
+name: Renovate
+
+on:
+  schedule:
+    - cron: '0 5 * * *'  # 5 AM UTC daily
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Renovate log level'
+        required: false
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - info
+          - warn
+          - error
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@6a0f661a0c065127f1929c4cfadbb5f87f8eb8e8 # v41.7.4
+        env:
+          LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          configurationFile: renovate.json
