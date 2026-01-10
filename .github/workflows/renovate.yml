@@ -6,13 +6,13 @@ name: Renovate
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # 5 AM UTC daily
+    - cron: '0 5 * * 1'
   workflow_dispatch:
     inputs:
       logLevel:
         description: 'Renovate log level'
         required: false
-        default: 'debug'
+        default: 'info'
         type: choice
         options:
           - debug
