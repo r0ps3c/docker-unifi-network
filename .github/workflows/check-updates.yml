@@ -17,7 +17,7 @@ jobs:
       # Restore cached version
       - name: Restore cached UniFi version
         id: cache-restore
-        uses: actions/cache/restore@6f8efc29b200d32929f49075959781ed54ec270c # v3.5.0
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: unifi-version.txt
           key: unifi-version-cache
@@ -59,7 +59,7 @@ jobs:
 
       - name: Save cache
         if: steps.check-version.outputs.version_changed == 'true'
-        uses: actions/cache/save@6f8efc29b200d32929f49075959781ed54ec270c # v3.5.0
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: unifi-version.txt
           key: unifi-version-cache
