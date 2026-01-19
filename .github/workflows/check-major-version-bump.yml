@@ -1,6 +1,6 @@
 name: Check for Major Version Bump
 permissions:
-  contents: read
+  contents: write  # Needed to push PR branch
   pull-requests: write
 
 on:
