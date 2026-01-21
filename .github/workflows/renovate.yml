@@ -36,6 +36,7 @@ jobs:
         uses: renovatebot/github-action@a7e89c349a53ab0c9d8458eb85f4b415e55848e7 # v44.2.3
         env:
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           configurationFile: renovate.json
