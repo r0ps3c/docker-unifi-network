@@ -71,6 +71,16 @@
         "github-actions"
       ],
       "pinDigests": true
+    },
+    {
+      "description": "Handle aquasecurity/trivy-action inconsistent tag naming",
+      "matchDatasources": [
+        "github-tags"
+      ],
+      "matchPackageNames": [
+        "aquasecurity/trivy-action"
+      ],
+      "extractVersion": "^v?(?<version>.*)$"
     }
   ]
 }
