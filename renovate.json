@@ -62,7 +62,7 @@
       ]
     },
     {
-      "description": "GitHub Actions updates - pin digests for security",
+      "description": "GitHub Actions updates - automerge all versions",
       "matchManagers": [
         "github-actions"
       ],
@@ -71,7 +71,10 @@
         "renovate",
         "github-actions"
       ],
-      "pinDigests": true
+      "pinDigests": true,
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
     },
     {
       "description": "Handle aquasecurity/trivy-action inconsistent tag naming",
