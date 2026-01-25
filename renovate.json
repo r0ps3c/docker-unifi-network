@@ -3,6 +3,7 @@
   "extends": [
     "config:recommended"
   ],
+  "dependencyDashboard": false,
   "minimumReleaseAge": "2 days",
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
