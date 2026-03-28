@@ -13,7 +13,11 @@ on:
 
 jobs:
   build-scan-push:
-    uses: r0ps3c/gh-shared-workflows/.github/workflows/docker-build-scan-push.yml@3bc8a86e2aa0762b4d6e239198dc0c639d2fe856 # main
+    uses: r0ps3c/gh-shared-workflows/.github/workflows/docker-build-scan-push.yml@888bf82066a53e73b6ce21f5be304b74e4aeb104 # main
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
     with:
       image-ref: unifi-network:main
       version-extract-command: "dpkg -s unifi | grep '^Version:' | awk '{print $2}'"
