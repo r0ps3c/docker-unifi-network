@@ -2,10 +2,14 @@ name: Build and Tag Docker Image
 
 on:
   push:
-    branches: [ main, stable ]
+    branches:
+      - main
+      - stable
   pull_request:
-    branches: [ main, stable ]
-  workflow_dispatch:  # Triggered by check-updates.yml or manual
+    branches:
+      - main
+      - stable
+  workflow_dispatch:
 
 jobs:
   build-scan-push:
