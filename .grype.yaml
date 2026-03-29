@@ -1,0 +1,18 @@
+ignore:
+  # CVE-2026-24734: OCSP revocation bypass in tomcat-embed-core 10.1.49.
+  # Fixed in 10.1.52+. Bundled by Ubiquiti in UniFi Network Application —
+  # not patchable by us. Low practical impact on small networks using
+  # self-signed certs (no OCSP). Track: https://github.com/advisories/GHSA-mgp5-rv84-w37q
+  - vulnerability: GHSA-mgp5-rv84-w37q
+    package:
+      name: tomcat-embed-core
+      type: java-archive
+
+  # CVE-2025-66021: XSS bypass in owasp-java-html-sanitizer 20240325.1.
+  # Fixed in 20260101.1. Bundled by Ubiquiti in UniFi Network Application —
+  # not patchable by us. Low practical impact when UI is not internet-exposed.
+  # Track: https://github.com/advisories/GHSA-g9gq-3pfx-2gw2
+  - vulnerability: GHSA-g9gq-3pfx-2gw2
+    package:
+      name: owasp-java-html-sanitizer
+      type: java-archive
