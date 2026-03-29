@@ -23,16 +23,13 @@ jobs:
           key: unifi-version-cache
 
       # Check latest version
-      - name: Check UniFi version from APT
+      - name: Check UniFi version from API
         id: check-version
         run: |
-          # Add Ubiquiti repository
-          echo 'deb https://www.ui.com/downloads/unifi/debian stable ubiquiti' | sudo tee /etc/apt/sources.list.d/unifi.list
-          wget -qO - https://dl.ui.com/unifi/unifi-repo.gpg | sudo apt-key add -
-          sudo apt-get update -qq
-
-          # Get latest version
-          NEW_VERSION=$(apt-cache policy unifi | grep Candidate | awk '{print $2}')
+          # Get latest version from Ubiquiti firmware API
+          NEW_VERSION=$(curl -sf \
+            'https://fw-update.ubnt.com/api/firmware-latest?filter=eq~~product~~unifi-controller&filter=eq~~platform~~unix&filter=eq~~channel~~release' \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['_embedded']['firmware'][0]['version'].split('+')[0].lstrip('v'))")
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
           # Get cached version

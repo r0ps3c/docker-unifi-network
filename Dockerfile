@@ -14,18 +14,22 @@ LABEL org.opencontainers.image.description="Ubiquiti UniFi Network Application"
 LABEL org.opencontainers.image.vendor="Custom Build"
 LABEL org.opencontainers.image.source="https://github.com/r0ps3c/docker-unifi-network"
 COPY --from=builder /tmp/mongodb-server*.deb /tmp/
+ARG UNIFI_VERSION
 RUN \
 	apt update && \
-	apt -y install ca-certificates apt-transport-https wget gnupg && \
-	dpkg -i /tmp/mongodb-server*deb && \
-	echo 'deb https://www.ui.com/downloads/unifi/debian stable ubiquiti' > /etc/apt/sources.list.d/100-ubnt-unifi.list && \
-	wget -qO /etc/apt/trusted.gpg.d/unifi-repo.gpg https://dl.ui.com/unifi/unifi-repo.gpg && \
-	apt update && \
+	apt -y install ca-certificates curl && \
+	dpkg -i /tmp/mongodb-server*.deb && \
+	if [ -z "${UNIFI_VERSION}" ]; then \
+		UNIFI_VERSION=$(curl -sf \
+			'https://fw-update.ubnt.com/api/firmware-latest?filter=eq~~product~~unifi-controller&filter=eq~~platform~~unix&filter=eq~~channel~~release' \
+			| python3 -c "import sys,json; print(json.load(sys.stdin)['_embedded']['firmware'][0]['version'].split('+')[0].lstrip('v'))"); \
+	fi && \
+	curl -fL -o /tmp/unifi.deb "https://dl.ui.com/unifi/${UNIFI_VERSION}/unifi_sysvinit_all.deb" && \
 	useradd --shell /bin/false --uid 5000 --home /var/lib/unifi --no-create-home unifi && \
-	apt install -yy unifi && \
+	apt install -y /tmp/unifi.deb && \
 	apt -y --purge autoremove && \
-        apt -y clean && \
-        rm -rf /var/lib/apt/lists/* /tmp/* && \
+	apt -y clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* && \
 	mkdir -p /logs /usr/lib/unifi/run /usr/lib/unifi/data && \
 	chown -R unifi:unifi /logs /usr/lib/unifi/run /usr/lib/unifi/data
 

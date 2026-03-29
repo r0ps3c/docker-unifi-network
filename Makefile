@@ -5,7 +5,7 @@ DOCKERFILE:=Dockerfile
 .PHONY: build push test test-all test-structure test-standalone test-integration clean-test
 
 build:
-	docker build --pull -t $(PKGNAME):$(TAG) -f $(DOCKERFILE) .
+	docker build --pull -t $(PKGNAME):$(TAG) $(if $(UNIFI_VERSION),--build-arg UNIFI_VERSION=$(UNIFI_VERSION),) -f $(DOCKERFILE) .
 
 test-structure: build
 	@echo "========================================="
