@@ -29,7 +29,7 @@ jobs:
           # Get latest version from Ubiquiti firmware API
           NEW_VERSION=$(curl -sf \
             'https://fw-update.ubnt.com/api/firmware-latest?filter=eq~~product~~unifi-controller&filter=eq~~platform~~unix&filter=eq~~channel~~release' \
-            | python3 -c "import sys,json; print(json.load(sys.stdin)['_embedded']['firmware'][0]['version'].split('+')[0].lstrip('v'))")
+            | grep -o '"version":"[^"]*"' | head -1 | cut -d'"' -f4 | sed 's/^v//' | cut -d'+' -f1)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
           # Get cached version

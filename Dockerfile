@@ -22,7 +22,7 @@ RUN \
 	if [ -z "${UNIFI_VERSION}" ]; then \
 		UNIFI_VERSION=$(curl -sf \
 			'https://fw-update.ubnt.com/api/firmware-latest?filter=eq~~product~~unifi-controller&filter=eq~~platform~~unix&filter=eq~~channel~~release' \
-			| python3 -c "import sys,json; print(json.load(sys.stdin)['_embedded']['firmware'][0]['version'].split('+')[0].lstrip('v'))"); \
+			| grep -o '"version":"[^"]*"' | head -1 | cut -d'"' -f4 | sed 's/^v//' | cut -d'+' -f1); \
 	fi && \
 	curl -fL -o /tmp/unifi.deb "https://dl.ui.com/unifi/${UNIFI_VERSION}/unifi_sysvinit_all.deb" && \
 	useradd --shell /bin/false --uid 5000 --home /var/lib/unifi --no-create-home unifi && \
