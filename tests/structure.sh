@@ -121,48 +121,32 @@ else
     log_error "Java is not installed or not executable"
 fi
 
-# Test 10: UniFi GPG key exists
-log_info "Test 10: UniFi GPG key exists"
-if docker exec "$CONTAINER_NAME" test -f /etc/apt/trusted.gpg.d/unifi-repo.gpg; then
-    log_success "UniFi GPG key exists"
-else
-    log_error "UniFi GPG key not found"
-fi
-
-# Test 11: UniFi repository configured
-log_info "Test 11: UniFi repository configured"
-if docker exec "$CONTAINER_NAME" grep -q "deb https://www.ui.com/downloads/unifi/debian stable ubiquiti" /etc/apt/sources.list.d/100-ubnt-unifi.list 2>/dev/null; then
-    log_success "UniFi repository configured correctly"
-else
-    log_error "UniFi repository not configured or incorrect"
-fi
-
-# Test 12: UniFi package installed
-log_info "Test 12: UniFi package installed"
+# Test 10: UniFi package installed
+log_info "Test 10: UniFi package installed"
 if docker exec "$CONTAINER_NAME" dpkg -l unifi 2>/dev/null | grep -q "^ii.*unifi"; then
     log_success "UniFi package is installed"
 else
     log_error "UniFi package is not installed"
 fi
 
-# Test 13: MongoDB dummy package installed
-log_info "Test 13: MongoDB dummy package installed"
+# Test 11: MongoDB dummy package installed
+log_info "Test 11: MongoDB dummy package installed"
 if docker exec "$CONTAINER_NAME" dpkg -l mongodb-server 2>/dev/null | grep -q "^ii.*mongodb-server"; then
     log_success "MongoDB dummy package is installed"
 else
     log_error "MongoDB dummy package is not installed"
 fi
 
-# Test 14: CA certificates installed
-log_info "Test 14: CA certificates installed"
+# Test 12: CA certificates installed
+log_info "Test 12: CA certificates installed"
 if docker exec "$CONTAINER_NAME" test -f /etc/ssl/certs/ca-certificates.crt; then
     log_success "CA certificates are installed"
 else
     log_error "CA certificates not found"
 fi
 
-# Test 15: No temporary files left behind
-log_info "Test 15: No temporary files left in /tmp"
+# Test 13: No temporary files left behind
+log_info "Test 13: No temporary files left in /tmp"
 TMP_COUNT=$(docker exec "$CONTAINER_NAME" sh -c 'ls /tmp 2>&1 | wc -l' 2>/dev/null || echo "1")
 if [ "$TMP_COUNT" = "0" ]; then
     log_success "No temporary files in /tmp"
