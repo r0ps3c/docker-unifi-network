@@ -17,6 +17,7 @@ COPY --from=builder /tmp/mongodb-server*.deb /tmp/
 ARG UNIFI_VERSION
 RUN \
 	apt update && \
+	apt -y upgrade && \
 	apt -y install ca-certificates curl && \
 	dpkg -i /tmp/mongodb-server*.deb && \
 	if [ -z "${UNIFI_VERSION}" ]; then \
