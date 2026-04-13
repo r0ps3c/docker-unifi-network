@@ -16,3 +16,25 @@ ignore:
     package:
       name: owasp-java-html-sanitizer
       type: java-archive
+
+  # Additional tomcat-embed-core CVEs in 10.1.49 bundled by Ubiquiti.
+  # Not patchable by us — awaiting Ubiquiti to update their bundled Tomcat.
+  - vulnerability: GHSA-x4m4-345f-5h5g
+    package:
+      name: tomcat-embed-core
+      type: java-archive
+
+  - vulnerability: GHSA-rv64-5gf8-9qq8
+    package:
+      name: tomcat-embed-core
+      type: java-archive
+
+  - vulnerability: GHSA-563x-q5rq-57qp
+    package:
+      name: tomcat-embed-core
+      type: java-archive
+
+  - vulnerability: GHSA-95jq-rwvf-vjx4
+    package:
+      name: tomcat-embed-core
+      type: java-archive
