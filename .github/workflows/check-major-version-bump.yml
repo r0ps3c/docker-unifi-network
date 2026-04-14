@@ -70,51 +70,54 @@ jobs:
 
       - name: Create PR for stable promotion
         if: steps.check-bump.outputs.major_changed == 'true'
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: promote UniFi ${{ steps.main-version.outputs.major }}.x to stable"
-          branch: promote-stable-v${{ steps.main-version.outputs.major }}
-          base: stable
-          title: "Promote UniFi ${{ steps.main-version.outputs.major }}.x to stable"
-          body: |
-            ## UniFi Major Version Promotion
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="promote-stable-v${{ steps.main-version.outputs.major }}"
+          git push origin HEAD:"refs/heads/$BRANCH" --force
 
-            This PR promotes the stable branch to UniFi **${{ steps.main-version.outputs.major }}.x**.
+          gh label create "stable-promotion" --color "0075ca" --description "Promotes to stable branch" 2>/dev/null || true
+          gh label create "major-version-bump" --color "e4e669" --description "Indicates a major version bump" 2>/dev/null || true
 
-            ### Version Changes
-            - Current stable: UniFi ${{ steps.stable-version.outputs.full }} (major version ${{ steps.stable-version.outputs.major }})
-            - New version: UniFi ${{ steps.main-version.outputs.full }} (major version ${{ steps.main-version.outputs.major }})
+          EXISTING=$(gh pr list --head "$BRANCH" --base stable --json number --jq 'length' 2>/dev/null || echo "0")
+          if [ "$EXISTING" = "0" ]; then
+            cat > /tmp/pr-body.md << EOF
+          ## UniFi Major Version Promotion
 
-            ### What happens when merged:
-            - `stable` branch will be updated to match `main`
-            - `stable` tag will point to UniFi ${{ steps.main-version.outputs.major }}.x
+          This PR promotes the stable branch to UniFi **${{ steps.main-version.outputs.major }}.x**.
 
-            ### Testing Checklist
-            - [ ] Review [build logs](https://github.com/${{ github.repository }}/actions)
-            - [ ] Verify `latest` tag works: `docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest`
-            - [ ] Test UniFi ${{ steps.main-version.outputs.major }}.x functionality
-            - [ ] Check for breaking changes in [UniFi release notes](https://community.ui.com/releases)
+          ### Version Changes
+          - Current stable: UniFi ${{ steps.stable-version.outputs.full }} (major version ${{ steps.stable-version.outputs.major }})
+          - New version: UniFi ${{ steps.main-version.outputs.full }} (major version ${{ steps.main-version.outputs.major }})
 
-            ### Manual Testing Commands
-            ```bash
-            # Pull and test the new version
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.main-version.outputs.major }}
-            docker run -d --name unifi-test -p 8443:8443 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.main-version.outputs.major }}
+          ### What happens when merged:
+          - \`stable\` branch will be updated to match \`main\`
+          - \`stable\` tag will point to UniFi ${{ steps.main-version.outputs.major }}.x
 
-            # Access at https://localhost:8443
-            # Verify setup wizard or existing config loads
+          ### Testing Checklist
+          - [ ] Review [build logs](https://github.com/${{ github.repository }}/actions)
+          - [ ] Verify \`latest\` tag works: \`docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`
+          - [ ] Test UniFi ${{ steps.main-version.outputs.major }}.x functionality
+          - [ ] Check for breaking changes in [UniFi release notes](https://community.ui.com/releases)
 
-            # Cleanup
-            docker rm -f unifi-test
-            ```
+          ### Manual Testing Commands
+          \`\`\`bash
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.main-version.outputs.major }}
+          docker run -d --name unifi-test -p 8443:8443 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.main-version.outputs.major }}
+          docker rm -f unifi-test
+          \`\`\`
 
-            ---
+          ---
+          This PR was automatically created by the version bump detection workflow.
+          EOF
 
-            🤖 This PR was automatically created by the version bump detection workflow.
-          labels: |
-            stable-promotion
-            major-version-bump
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
-          sign-commits: true  # Required for branch protection rules
+            gh pr create \
+              --base stable \
+              --head "$BRANCH" \
+              --title "Promote UniFi ${{ steps.main-version.outputs.major }}.x to stable" \
+              --label "stable-promotion" \
+              --label "major-version-bump" \
+              --body-file /tmp/pr-body.md
+          else
+            echo "PR already exists for branch $BRANCH, skipping creation"
+          fi
