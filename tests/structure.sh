@@ -102,8 +102,8 @@ fi
 # Test 8: Run directory exists with correct ownership
 log_info "Test 8: UniFi run directory exists with correct ownership"
 if docker exec "$CONTAINER_NAME" test -d /usr/lib/unifi/run; then
-    RUN_DIR_UID=$(docker exec "$CONTAINER_NAME" stat -c '%u' /usr/lib/unifi/run)
-    RUN_DIR_GID=$(docker exec "$CONTAINER_NAME" stat -c '%g' /usr/lib/unifi/run)
+    RUN_DIR_UID=$(docker exec "$CONTAINER_NAME" stat -c '%u' -L /usr/lib/unifi/run)
+    RUN_DIR_GID=$(docker exec "$CONTAINER_NAME" stat -c '%g' -L /usr/lib/unifi/run)
     if [ "$RUN_DIR_UID" = "5000" ] && [ "$RUN_DIR_GID" = "5000" ]; then
         log_success "Run directory exists with correct ownership (5000:5000)"
     else
