@@ -1,40 +1,13 @@
 ignore:
-  # CVE-2026-24734: OCSP revocation bypass in tomcat-embed-core 10.1.49.
-  # Fixed in 10.1.52+. Bundled by Ubiquiti in UniFi Network Application —
-  # not patchable by us. Low practical impact on small networks using
-  # self-signed certs (no OCSP). Track: https://github.com/advisories/GHSA-mgp5-rv84-w37q
-  - vulnerability: GHSA-mgp5-rv84-w37q
-    package:
-      name: tomcat-embed-core
-      type: java-archive
+  # All packages under Ubiquiti's bundled lib directory are owned by the unifi
+  # apt package and cannot be patched independently. Suppressing by path means
+  # this rule stays valid across UniFi version upgrades without manual updates.
+  - package:
+      location: "/usr/lib/unifi/lib/local/**"
 
-  # CVE-2025-66021: XSS bypass in owasp-java-html-sanitizer 20240325.1.
-  # Fixed in 20260101.1. Bundled by Ubiquiti in UniFi Network Application —
-  # not patchable by us. Low practical impact when UI is not internet-exposed.
-  # Track: https://github.com/advisories/GHSA-g9gq-3pfx-2gw2
-  - vulnerability: GHSA-g9gq-3pfx-2gw2
-    package:
-      name: owasp-java-html-sanitizer
-      type: java-archive
-
-  # Additional tomcat-embed-core CVEs in 10.1.49 bundled by Ubiquiti.
-  # Not patchable by us — awaiting Ubiquiti to update their bundled Tomcat.
-  - vulnerability: GHSA-x4m4-345f-5h5g
-    package:
-      name: tomcat-embed-core
-      type: java-archive
-
-  - vulnerability: GHSA-rv64-5gf8-9qq8
-    package:
-      name: tomcat-embed-core
-      type: java-archive
-
-  - vulnerability: GHSA-563x-q5rq-57qp
-    package:
-      name: tomcat-embed-core
-      type: java-archive
-
-  - vulnerability: GHSA-95jq-rwvf-vjx4
-    package:
-      name: tomcat-embed-core
-      type: java-archive
+  # Go modules embedded in the pebble binary (Ubuntu-packaged process manager).
+  # The Dockerfile already runs apt upgrade on every build, so pebble is always
+  # the latest version Ubuntu ships. CVEs here require Ubuntu to rebuild pebble
+  # with a patched Go toolchain — outside our control.
+  - package:
+      location: "/usr/bin/pebble"
