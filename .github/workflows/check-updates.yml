@@ -21,7 +21,7 @@ jobs:
         run: |
           if docker pull "$IMAGE" 2>/dev/null; then
             OLD_VERSION=$(docker run --rm --entrypoint sh "$IMAGE" -c \
-              "dpkg -s unifi | grep '^Version:' | awk '{print \$2}'")
+              "dpkg -s unifi | grep '^Version:' | awk '{print \$2}'" | cut -d'-' -f1)
           else
             OLD_VERSION=""
           fi
